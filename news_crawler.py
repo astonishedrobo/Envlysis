@@ -8,7 +8,7 @@ from utils.crawling.crawler import date_range, fetch_news, save_news
 # Global lock for thread-safe file operations
 file_lock = Lock()
 
-def fetch_and_save_news(start: tuple, end: tuple, query: str, filename: str, file_lock: threading.Lock, fetch_article: bool = False):
+def fetch_and_save_news(start: tuple, end: tuple, query: str, filename: str, file_lock: Lock, fetch_article: bool = False):
     news = fetch_news(start, end, query, fetch_article=fetch_article)
     save_news(news, file_lock, filename)
     return len(news)

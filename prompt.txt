@@ -1,0 +1,5 @@
+For the given document answer the following questions: 
+    1. What are the key sustainability focus areas mentioned in the document? 
+    2. List all the subtacks mentioned under each focus area along with the target figures and timelines mentioned for these, if any.
+    3. What are the best practices or lessons learnt mentioned for the tasks, if any.
+Return the answers in a json format where the keys are the questions (Q1, Q2, so on) and the values are the answers. Example: {"Q1": <answer for Q1 in Just text>}
