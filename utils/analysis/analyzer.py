@@ -13,15 +13,15 @@ import requests
     
 def read_pdf(file_path: str, return_list: bool = False):
     pdf = PdfReader(file_path)
-    text = []
+    corpus = []
     for page in pdf.pages:
         text = page.extract_text()
-        text.append(text)
+        corpus.append(text)
 
     if return_list:
-        return text
+        return corpus
     else:
-        return '\n\n'.join(text)
+        return '\n\n'.join(corpus)
 
 
 def extract_hyperlinks(pdf_reader):
