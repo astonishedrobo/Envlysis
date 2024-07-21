@@ -7,7 +7,6 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.prompts import PromptTemplate
-from langchain import hub
 import requests
 
     
@@ -79,7 +78,7 @@ def get_llm(model_name: str = 'gpt-3.5-turbo'):
     return ChatOpenAI(model_name=model_name)
 
 
-def analyze_doc(file_path: str, question: str, augment_link: str = False, previous_context: str = None, model_name: str = 'gpt-3.5-turbo'):
+def analyze_doc_rag(file_path: str, question: str, augment_link: str = False, previous_context: str = None, model_name: str = 'gpt-3.5-turbo'):
     text = read_pdf(file_path)
     if augment_link:
         print("Augmenting Text With Content From Hyperlinks")
@@ -120,5 +119,37 @@ def analyze_doc(file_path: str, question: str, augment_link: str = False, previo
     answer = rag_chain.invoke(question)
 
     return answer
+
+
+def analyze_doc(text: str, question: str, augment_link: str = False, model_name: str = 'gpt-3.5-turbo'):
+    # Define llm
+    llm = get_llm(model_name=model_name)
+
+    # Define prompt
+    template = '''Use the following pieces of context to answer the question at the end in JSON format.
+        If you don't know the answer, just return null, don't try to make up an answer.
+        
+
+        Context: {context}
+
+        Question: {question}
+
+        Answer: 
+    '''
+    prompt = PromptTemplate.from_template(template)
+
+    # llm Chain
+    llm_chain = (
+        {"context": lambda x: text, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | JsonOutputParser()
+    )
+
+    # Run the chain
+    answer = llm_chain.invoke(question)
+
+    return answer
+
 
 

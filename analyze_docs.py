@@ -1,7 +1,7 @@
 import argparse
 import dotenv
 import os
-from utils.analysis.analyzer import analyze_doc
+from utils.analysis.analyzer import analyze_doc_rag
 import json
 
 def parse_args():
@@ -34,7 +34,7 @@ def main():
             # Previous context is the previous answers (j<i) concatenated
             previous_context = '\n\n'.join([str(doc_analysis[f"Q{j+1}"]) for j in range(i)])
             # previous_context = doc_analysis[f"Q{i}"]
-        doc_analysis[f"Q{i+1}"] = analyze_doc(args.doc_path, question=query, augment_link=args.augment_links, previous_context=previous_context, model_name='gpt-3.5-turbo')
+        doc_analysis[f"Q{i+1}"] = analyze_doc_rag(args.doc_path, question=query, augment_link=args.augment_links, previous_context=previous_context, model_name='gpt-3.5-turbo')
     print(doc_analysis)
     # Save the analysis in Json file
     with open(f'doc_analysis_{args.country}.json', 'w') as file:
