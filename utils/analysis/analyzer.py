@@ -8,6 +8,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 import requests
+import json
 
     
 def read_pdf(file_path: str, return_list: bool = False):
@@ -151,5 +152,51 @@ def analyze_doc(text: str, question: str, augment_link: str = False, model_name:
 
     return answer
 
+def get_news_corpus(path: str, return_db: bool = False):
+    corpus = []
+    with open(path, 'r') as file:
+        text = json.load(file)
+        for news in text:
+            corpus.append(news['article'])
 
+    if return_db:
+        return corpus, split_and_store_db('\n\n'.join(corpus))
+    else:
+        return '\n\n'.join(corpus)
 
+def analyze_news_corpus(question: str, text: str = None, vector_db = None, model_name: str = 'gpt-3.5-turbo'):
+    if not vector_db:
+        vector_db = split_and_store_db(text)
+    
+    # Retrieve the most similar chunks
+    retriever = vector_db.as_retriever(search_type='similarity')
+
+    # Define llm
+    llm = get_llm(model_name=model_name)
+
+    # Define prompt
+    template = '''Use the following pieces of context to answer the question at the end in JSON format.
+        If you don't know the answer, just retun None as value, don't try to make up an answer.
+        
+
+        Context: {context}
+
+        Question: {question}
+
+        Answer: 
+    '''
+    prompt = PromptTemplate.from_template(template)
+
+    # Rag Chain
+    rag_chain = (
+        {"context": retriever | join_context, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | JsonOutputParser()
+    )
+
+    # Run the chain
+    answer = rag_chain.invoke(question)
+
+    return answer
+    

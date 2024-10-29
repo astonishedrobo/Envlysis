@@ -17,7 +17,7 @@ def process_news_item(item, index, questions, max_retries=2):
             temp = {
                 'title': item['title'],
                 'news_idx': index,
-                'analysis': analyze_news(item['article'], questions, single_questioning=True)
+                'analysis': analyze_news(item['article'], questions)
             }
             
             # Save individual result to JSON file
@@ -41,7 +41,7 @@ def process_news_item(item, index, questions, max_retries=2):
                             f.seek(0)
                             json.dump(failed_indices, f, indent=4)
                     except FileNotFoundError:
-                        with open('failed_news_indices.json', 'w') as f:
+                        with open('failed_news_indices_rerun.json', 'w') as f:
                             json.dump({'idx': [index]}, f, indent=4)
                 return {
                     'title': item['title'],
@@ -74,7 +74,7 @@ def main():
     load_dotenv(dotenv_path=env_path)
 
     # Load the news
-    with open('../dev/full_news_1.json', 'r') as f:
+    with open('/home/soumyajit/Downloads/RA/Codes/data/agriculture_news.json', 'r') as f:
         news = json.load(f)
 
     # Load the questions
@@ -104,7 +104,7 @@ def main():
             time.sleep(30)
 
     # Save the complete analysis in a JSON file
-    with open('news_analysis.json', 'w') as f:
+    with open('news_analysis_rerun.json', 'w') as f:
         json.dump(analysis, f, indent=4)
 
 if __name__ == "__main__":

@@ -1,13 +1,16 @@
 {
+  "prompt": "",
+  "questions": {
     "Q1": "Which of the following aspects affected by climate change does this article primarily discuss? (a) Health, (b) Agriculture, (c) Biodiversity",
     
     "Q2": "Identify all entities mentioned in the article and briefly describe their roles.",
     
-    "Q3": "Categorize the identified entities as either: (a) Actors contributing to climate change, (b) Victims of climate change impacts",
+    "Q3": "Categorize each entity as one of the following : (a) Actor contributing to alleviate impact of climate change, (b) Victims of climate change impact, (c) Neither",
     
     "Q4": "Does the article report a specific event related to climate change? If yes, what is the event? Provide a brief summary of the event.",
     
     "Q5": "Summarize the main points of the article in 2-3 sentences.",
 
     "Q6": "Which region/state/city of India is reffered here? (Return a dictionary with keys as state and values as the name of the state(s) in a list)"
-  }   
+  } 
+}  
