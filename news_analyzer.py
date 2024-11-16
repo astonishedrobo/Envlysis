@@ -7,17 +7,18 @@ from dotenv import load_dotenv
 import shutil
 import threading
 import time
+from argparse import ArgumentParser
 
 # Global lock for file writing
 file_lock = threading.Lock()
 
-def process_news_item(item, index, questions, max_retries=2):
+def process_news_item(item, index, questions, model_name ='gpt-3.5-turbo', max_retries=2):
     for attempt in range(max_retries):
         try:
             temp = {
                 'title': item['title'],
                 'news_idx': index,
-                'analysis': analyze_news(item['article'], questions)
+                'analysis': analyze_news(item['article'], questions, model_name=model_name)
             }
             
             # Save individual result to JSON file
@@ -56,9 +57,9 @@ def process_news_item(item, index, questions, max_retries=2):
         'analysis': None
     }
 
-def process_batch(batch, questions, pbar):
+def process_batch(batch, questions, pbar, model_name='gpt-3.5-turbo'):
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_news_item, item, idx, questions) 
+        futures = [executor.submit(process_news_item, item, idx, questions, model_name=model_name) 
                    for idx, item in batch]
         
         results = []
@@ -69,6 +70,10 @@ def process_batch(batch, questions, pbar):
     return results
 
 def main():
+    args = ArgumentParser()
+    args.add_argument("--model", type=str, default='gpt-3.5-turbo', help="Model name to use for analysis")
+    args = args.parse_args()
+
     # Load the environment variables
     env_path = '.env'
     load_dotenv(dotenv_path=env_path)
@@ -97,7 +102,7 @@ def main():
     with tqdm(total=len(news), desc="Processing news items") as pbar:
         for i in range(0, len(news), batch_size):
             batch = list(enumerate(news[i:i+batch_size], start=i))
-            batch_results = process_batch(batch, questions, pbar)
+            batch_results = process_batch(batch, questions, pbar, model_name=args.model)
             analysis.extend(batch_results)
         
             # Optional: Add a delay between batches to further mitigate rate limiting
