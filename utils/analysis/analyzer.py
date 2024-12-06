@@ -7,7 +7,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.prompts import PromptTemplate
-from langchain_community.llms import Ollama
+from langchain_ollama import ChatOllama
 import requests
 import json
 
@@ -80,7 +80,7 @@ def get_llm(model_name: str = 'gpt-3.5-turbo'):
     if 'gpt' in model_name:
         return ChatOpenAI(model_name=model_name)
     else: 
-        return Ollama(model=model_name)
+        return ChatOllama(model=model_name)
 
 
 def analyze_doc_rag(file_path: str, question: str, augment_link: str = False, previous_context: str = None, model_name: str = 'gpt-3.5-turbo'):
