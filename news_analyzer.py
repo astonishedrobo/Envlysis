@@ -12,18 +12,18 @@ from argparse import ArgumentParser
 # Global lock for file writing
 file_lock = threading.Lock()
 
-def process_news_item(item, index, questions, model_name ='gpt-3.5-turbo', max_retries=2):
+def process_news_item(item, index, questions, args, model_name ='gpt-3.5-turbo', max_retries=2):
     for attempt in range(max_retries):
         try:
             temp = {
                 'title': item['title'],
                 'news_idx': index,
-                'analysis': analyze_news(item['article'], questions, model_name=model_name)
+                'analysis': analyze_news(item['article'], questions, model_name=model_name, return_json=args.json)
             }
             
             # Save individual result to JSON file
             with file_lock:
-                with open(f'news_individual/news_analysis_{index}.json', 'w') as f:
+                with open(f'{args.out_dir}/news_analysis_{index}.json', 'w') as f:
                     json.dump(temp, f, indent=4)
             
             return temp
@@ -57,9 +57,9 @@ def process_news_item(item, index, questions, model_name ='gpt-3.5-turbo', max_r
         'analysis': None
     }
 
-def process_batch(batch, questions, pbar, model_name='gpt-3.5-turbo'):
+def process_batch(batch, questions, pbar, args, model_name='gpt-3.5-turbo'):
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_news_item, item, idx, questions, model_name=model_name) 
+        futures = [executor.submit(process_news_item, item, idx, questions, args=args, model_name=model_name) 
                    for idx, item in batch]
         
         results = []
@@ -72,14 +72,16 @@ def process_batch(batch, questions, pbar, model_name='gpt-3.5-turbo'):
 def main():
     args = ArgumentParser()
     args.add_argument("--model", type=str, default='gpt-3.5-turbo', help="Model name to use for analysis")
+    args.add_argument("--json", action="store_true", default=False, help="Return JSON output from the model")
+    args.add_argument("--out_dir", type=str, default='news_individual', help="Directory to save individual news analysis")
     args = args.parse_args()
-
+    
     # Load the environment variables
     env_path = '.env'
     load_dotenv(dotenv_path=env_path)
 
     # Load the news
-    with open('/home/soumyajit/Downloads/RA/Codes/data/agriculture_news.json', 'r') as f:
+    with open('/mnt/hdd/RA/Codes/data/agriculture_news.json', 'r') as f:
         news = json.load(f)
 
     # Load the questions
@@ -87,14 +89,16 @@ def main():
         questions = json.load(f)
 
     # Create a directory to save individual results
-    if os.path.exists('news_individual'):
-        is_delete = input("The 'news_individual' directory already exists. Do you want to delete it? [y/N]: ")
+    print(f"Saving individual news analysis to '{args.out_dir}'")
+    print('THe folder exists?:', os.path.exists(args.out_dir))
+    if os.path.exists(args.out_dir):
+        is_delete = input(f"The '{args.out_dir}' directory already exists. Do you want to delete it? [y/N]: ")
         is_delete = 'N' if not is_delete else is_delete.upper()
         if is_delete == 'Y':
-            shutil.rmtree('news_individual')
+            shutil.rmtree(args.out_dir)
         else:
-            print("Terminating. Folder 'news_individual' already exists.")
-    os.makedirs('news_individual')
+            print(f"Terminating. Folder '{args.out_dir}' already exists.")
+    os.makedirs(args.out_dir)
 
     
     batch_size = 50
@@ -102,14 +106,14 @@ def main():
     with tqdm(total=len(news), desc="Processing news items") as pbar:
         for i in range(0, len(news), batch_size):
             batch = list(enumerate(news[i:i+batch_size], start=i))
-            batch_results = process_batch(batch, questions, pbar, model_name=args.model)
+            batch_results = process_batch(batch, questions, pbar, args=args, model_name=args.model)
             analysis.extend(batch_results)
         
             # Optional: Add a delay between batches to further mitigate rate limiting
             time.sleep(30)
 
     # Save the complete analysis in a JSON file
-    with open('news_analysis_rerun.json', 'w') as f:
+    with open(f'news_analysis_{args.model}.json', 'w') as f:
         json.dump(analysis, f, indent=4)
 
 if __name__ == "__main__":

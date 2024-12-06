@@ -126,7 +126,7 @@ def analyze_doc_rag(file_path: str, question: str, augment_link: str = False, pr
     return answer
 
 
-def analyze_doc(text: str, question: str, augment_link: str = False, model_name: str = 'gpt-3.5-turbo'):
+def analyze_doc(text: str, question: str, augment_link: str = False, model_name: str = 'gpt-3.5-turbo', return_json: bool = True):
     # Define llm
     llm = get_llm(model_name=model_name)
 
@@ -144,12 +144,20 @@ def analyze_doc(text: str, question: str, augment_link: str = False, model_name:
     prompt = PromptTemplate.from_template(template)
 
     # llm Chain
-    llm_chain = (
-        {"context": lambda x: text, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | JsonOutputParser()
-    )
+    if return_json:
+        llm_chain = (
+            {"context": lambda x: text, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | JsonOutputParser()
+        )
+    else:
+        llm_chain = (
+            {"context": lambda x: text, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
 
     # Run the chain
     answer = llm_chain.invoke(question)
